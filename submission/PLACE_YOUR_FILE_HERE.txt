@@ -1,0 +1,7 @@
+Delete this file and place your submission file here.
+
+Your file should be named:
+  - LT1: STUDENTID_SetX.cpp   (e.g. B012345678_Set3.cpp)
+  - LT2: LT1_skeleton.cpp
+
+Only ONE file at a time in this folder.

@@ -1,136 +1,88 @@
 # BITP1123 — Lab Test Redemption Self-Check
 
-Use this repository to check your fixed lab test submission before the redemption deadline.
-Every time you push, the grader runs automatically and posts your result as a comment on your commit.
+Use this repository to check your redemption submission **before** the deadline.  
+Within ~2 minutes of pushing your file, a bot will comment on your commit with your result.
 
 ---
 
-## Who is this for?
+## Who can use this?
 
-Students who scored **below 6.5 / 7.5** in their original lab test and have been given the opportunity to resubmit. The maximum mark you can receive through redemption is **6.5 / 7.5**, regardless of how well you do.
+Students who scored **below 6.5 / 7.5** on **Lab Test 1** or **Lab Test 2** and wish to resubmit for redemption.
+
+> The redemption mark is **capped at 6.5 / 7.5** regardless of how well you score on resubmission.
 
 ---
 
-## How to submit your work
+## Step-by-step instructions
 
-### Step 1 — Clone this repository
+### 1 — Fork this repository
 
-```bash
-git clone https://github.com/YOUR_CLASSROOM_ORG/redemption-YOUR_STUDENT_ID.git
-cd redemption-YOUR_STUDENT_ID
-```
+Click the **Fork** button (top-right of this page) and fork it to your personal GitHub account.  
+Keep the repo **private** — do **not** share your submission with other students.
 
-### Step 2 — Place your file in the `submission/` folder
+> To make your forked repo private:  
+> Settings → General → Danger Zone → Change repository visibility → Private
 
-The `submission/` folder is where the grader looks. Place **only your submission file** there — nothing else.
+### 2 — Enable Actions on your fork
 
-| Lab Test | What to put in `submission/` |
-|---|---|
-| **Lab Test 1** (Searching) | Your zip file: `B012345678_Set2.zip` |
-| **Lab Test 2** (Sorting + Searching) | Your `.cpp` skeleton file: `B012345678_LT2.cpp` |
+GitHub disables Actions on forks by default.
 
-> ⚠️ Do not rename or restructure the `submission/` folder.
-> Do not put multiple zip files in there — only your latest attempt.
+1. Go to your fork → **Actions** tab  
+2. Click **"I understand my workflows, go ahead and enable them"**
 
-### Step 3 — Commit and push
+### 3 — Prepare your file
+
+| Lab Test | What to submit |
+|----------|---------------|
+| LT1 (Searching) | Your `.cpp` source file, named `STUDENTID_SetX.cpp` (e.g. `B012345678_Set3.cpp`) |
+| LT2 (Sorting + Searching) | Your completed `LT1_skeleton.cpp` file |
+
+### 4 — Place your file in the `submission/` folder
+
+- Delete the placeholder file `submission/PLACE_YOUR_FILE_HERE.txt`
+- Copy your file into the `submission/` folder
+- Only **one** file at a time
+
+### 5 — Commit and push
 
 ```bash
 git add submission/
-git commit -m "Submit redemption attempt"
+git commit -m "Submit redemption"
 git push
 ```
 
-### Step 4 — Check your result
+Or use GitHub Desktop / VS Code — just make sure the file lands in `submission/`.
 
-1. Go to your repository on GitHub.
-2. Click on the latest commit (the message you just typed).
-3. Scroll down — you will see a comment from **BITP1123 Grader Bot** with your marks.
+### 6 — Check your commit comment
 
-You will also find a detailed feedback file inside the `FEEDBACK/` folder after the bot commits it back.
+1. Go to your fork on GitHub
+2. Click on your latest commit (the commit hash link)
+3. Scroll down — the grader bot will have posted a comment like:
 
----
-
-## Understanding your result
-
-The commit comment will show one of these banners:
-
-**You have met the cap:**
 ```
-✅ Redemption Result: 6.50/7.5 — Meets the cap (6.5/7.5)
+## 🎓 BITP1123 Redemption Self-Check
+
+✅ Redemption Result: 6.50 / 7.5 — Meets the cap
+   LT1 | Set 3 | Raw: 7.20/7.5 → Capped: 6.50/7.5
 ```
 
-**You are below the cap — keep fixing:**
-```
-❌ Redemption Result: 5.25/7.5 — Below the cap (6.5/7.5)
-```
+or
 
-Below the banner you will see your full breakdown, for example:
-
-**Lab Test 1 (Searching):**
 ```
-*** REDEMPTION SUBMISSION ***
-Redemption cap: 6.5/7.5
-
-1. File structure compliance [1.0/1.0]
-2. Data setup & search loop [1.0/1.0]
-3. First algorithm (Sentinel) implementation [1.5/1.5]
-4. Binary Search implementation [2.0/2.0]
-5. Integration & CHALLENGE element [1.5/1.5]
-6. Code quality [0.5/0.5]
-Raw score : 7.5/7.5
-Capped at  : 6.5/7.5
-TOTAL: 6.5/7.5
-```
-
-**Lab Test 2 (Sorting + Searching):**
-```
-*** REDEMPTION SUBMISSION — Lab Test 2 ***
-Redemption cap: 6.5/7.5
-
-Part A  Theory blanks (A1–A10)       [20.0/20.0]
-Part B  Selection Sort               [20.0/20.0]
-Part C  Bubble Sort                  [20.0/20.0]
-Part D  Insertion Sort               [20.0/20.0]
-Part E  Searching (Linear + Binary)  [16.0/16.0]
-Raw score    : 96.0/96
-Scaled score : 7.50/7.5  (96.0 / 96 × 7.5)
-Capped at    : 6.5/7.5
-TOTAL: 6.50/7.5
+❌ Redemption Result: 4.80 / 7.5 — Below the cap (minimum 6.5 required)
 ```
 
 ---
 
-## You can push as many times as you like
+## Notes
 
-Every push re-runs the grader. Use this to:
-- Fix a bug and check whether it improved your score
-- Confirm your final submission before the deadline
-
-> ⚠️ Only your submission **before the deadline** counts. Pushing after the deadline will still run the grader and show you a result, but your lecturer will use the last push **before** the deadline.
+- You may push as many times as you like before the deadline — each push triggers a fresh check.
+- The self-check result is **indicative only**. Your lecturer runs the official grader on your final submission.
+- If the Actions tab shows a red ✗, check that you enabled Actions (Step 2) and that your file is inside `submission/`.
 
 ---
 
-## Common issues
+## Deadline
 
-**"No feedback file generated"**
-Your submission file may be missing or in the wrong folder. Make sure your file is inside `submission/` and that you have committed and pushed it.
-
-**"Target not found" for a value you expect to find**
-Check that your array is initialised with the correct data from the lab test question.
-
-**Compilation failed**
-The grader will still score your theory answers (Part A for LT2) and any structural code analysis it can do. But you will lose marks on the implementation parts. Fix the compile error and push again.
-
-**The grader detected the wrong lab test**
-This should not happen if you placed your file correctly. If it does, let your lecturer know.
-
----
-
-## Deadline reminder
-
-Your redemption submission must be pushed **before the deadline set by your lecturer**.
-Late pushes will be visible in the commit history but will not be accepted for marking.
-
----
-
-*BITP1123 Data Structure and Algorithm | FTMK, UTeM*
+Submit your **final** file to Moodle by the deadline communicated by your lecturer.  
+Pushing to this repo does **not** count as an official submission.
