@@ -1,0 +1,173 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# BITP1123 Redemption Self-Check — GitHub Actions Workflow
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# HOW IT WORKS:
+#   1. Student places their submission file inside the submission/ folder.
+#   2. Student commits and pushes to main.
+#   3. This workflow runs automatically (~1-2 minutes).
+#   4. The result appears as a comment on the commit AND in FEEDBACK/.
+#
+# WHAT IS CHECKED:
+#   - Lab Test 1 (Searching): zip containing 5 source files → graded /7.5
+#   - Lab Test 2 (Sorting+Searching): single .cpp skeleton → graded /7.5
+#     (raw /96 mark is automatically scaled to /7.5 before cap is applied)
+#
+# CAP: Maximum mark achievable through redemption is 6.5 / 7.5.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Redemption Self-Check
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'submission/**'     # triggers only when submission/ changes
+      - '**.cpp'
+      - '**.h'
+      - '**.zip'
+
+  # Allow manual re-trigger from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to commit feedback back into the repo
+
+    steps:
+      # ── 1. Check out the student's repo ──────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── 2. Install g++ ────────────────────────────────────────────────────────
+      - name: Install g++
+        run: sudo apt-get install -y g++
+
+      # ── 3. Set up Python ──────────────────────────────────────────────────────
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # ── 4. Download grader scripts from the lecturer's repo ───────────────────
+      #
+      #    LECTURER: before sharing this template with students, set the
+      #    GRADER_URL variable in your GitHub Classroom organisation settings
+      #    (or in each student repo under Settings → Secrets and Variables →
+      #    Actions → Variables) to the raw URL base of your grader scripts.
+      #
+      #    Example value:
+      #      https://raw.githubusercontent.com/YOUR_USERNAME/bitp1123-grader/main
+      #
+      - name: Download grader scripts
+        run: |
+          curl -fsSL -o grade_lab_searching.py \
+            "${{ vars.GRADER_URL }}/grade_lab_searching.py"
+          curl -fsSL -o grade_redemption.py \
+            "${{ vars.GRADER_URL }}/grade_redemption.py"
+
+      # ── 5. Run redemption grader ──────────────────────────────────────────────
+      #    Points at the submission/ folder so only the student's own file
+      #    is graded — not the README or workflow files.
+      - name: Run redemption grader
+        run: |
+          mkdir -p FEEDBACK
+          python grade_redemption.py \
+            --submissions submission \
+            --output      FEEDBACK/redemption_result.csv \
+            --feedback    FEEDBACK
+        continue-on-error: true   # always proceed to posting result
+
+      # ── 6. Read result and post as commit comment ─────────────────────────────
+      - name: Post result as commit comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs   = require('fs');
+            const path = require('path');
+
+            const fbDir = 'FEEDBACK';
+            let feedbackText = '⚠️ No feedback generated. Check the Actions log for errors.';
+            let total = null;
+            let passed = false;
+
+            // Find the feedback .txt (excludes ineligible notices)
+            if (fs.existsSync(fbDir)) {
+              const files = fs.readdirSync(fbDir)
+                .filter(f => f.endsWith('_redemption.txt'))
+                .map(f => ({
+                  name: f,
+                  mtime: fs.statSync(path.join(fbDir, f)).mtimeMs,
+                }))
+                .sort((a, b) => b.mtime - a.mtime);
+
+              if (files.length > 0) {
+                feedbackText = fs.readFileSync(
+                  path.join(fbDir, files[0].name), 'utf8'
+                );
+
+                // Extract TOTAL line to build the summary banner
+                const totalMatch = feedbackText.match(/^TOTAL:\s*([\d.]+)\/([\d.]+)/m);
+                if (totalMatch) {
+                  total  = parseFloat(totalMatch[1]);
+                  const cap = parseFloat(totalMatch[2]);
+                  passed = total >= 6.5;
+                }
+              }
+
+              // Check if student was ineligible
+              const ineligible = fs.readdirSync(fbDir)
+                .filter(f => f.endsWith('_ineligible.txt'));
+              if (ineligible.length > 0) {
+                feedbackText = fs.readFileSync(
+                  path.join(fbDir, ineligible[0]), 'utf8'
+                );
+                total = null;
+              }
+            }
+
+            // Build the banner line
+            let banner = '';
+            if (total !== null) {
+              if (passed) {
+                banner = `## ✅ Redemption Result: ${total}/7.5 — Meets the cap (6.5/7.5)`;
+              } else {
+                banner = `## ❌ Redemption Result: ${total}/7.5 — Below the cap (6.5/7.5)`;
+              }
+            } else {
+              banner = '## ℹ️ Redemption Result';
+            }
+
+            const body = [
+              banner,
+              '',
+              '```',
+              feedbackText.slice(0, 60000),
+              '```',
+              '',
+              '---',
+              `> Checked at ${new Date().toISOString()}`,
+              '> The mark shown is your **redemption mark**. ',
+              '> Your lecturer will take the higher of this and your original mark.',
+            ].join('\n');
+
+            await github.rest.repos.createCommitComment({
+              owner:      context.repo.owner,
+              repo:       context.repo.repo,
+              commit_sha: context.sha,
+              body:       body,
+            });
+
+      # ── 7. Commit feedback back into repo ─────────────────────────────────────
+      - name: Save feedback to repo
+        run: |
+          git config user.name  "BITP1123 Grader Bot"
+          git config user.email "grader@utem.edu.my"
+          git add FEEDBACK/
+          git diff --cached --quiet || \
+            git commit -m "grader: redemption check result [skip ci]"
+          git push
